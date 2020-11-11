@@ -16,6 +16,10 @@ from mit_semseg.utils import AverageMeter, parse_devices, setup_logger
 from mit_semseg.lib.nn import UserScatteredDataParallel, user_scattered_collate, patch_replication_callback
 
 
+# fix cuda
+cuda = torch.device('cuda:1')
+
+
 # train one epoch
 def train(segmentation_module, iterator, optimizers, history, epoch, cfg):
     batch_time = AverageMeter()
@@ -42,6 +46,9 @@ def train(segmentation_module, iterator, optimizers, history, epoch, cfg):
         # otherwise I don't know
         if isinstance(batch_data, list) and len(batch_data) == 1:
             batch_data = batch_data[0]
+
+        batch_data['img_data'] = batch_data['img_data'].to(device=cuda)
+        batch_data['seg_label'] = batch_data['seg_label'].to(device=cuda)
 
         # forward pass
         loss, acc = segmentation_module(batch_data)
@@ -194,7 +201,8 @@ def main(cfg, gpus):
             device_ids=gpus)
         # For sync bn
         patch_replication_callback(segmentation_module)
-    segmentation_module.cuda()
+
+    segmentation_module.to(device=cuda)
 
     # Set up optimizers
     nets = (net_encoder, net_decoder, crit)
