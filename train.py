@@ -37,6 +37,12 @@ def train(segmentation_module, iterator, optimizers, history, epoch, cfg):
         cur_iter = i + (epoch - 1) * cfg.TRAIN.epoch_iters
         adjust_learning_rate(optimizers, cur_iter, cfg)
 
+        # if batch size is list of len 1
+        # change it to batch_data = batch_data[0] (the value inside is dict)
+        # otherwise I don't know
+        if isinstance(batch_data, list) and len(batch_data) == 1:
+            batch_data = batch_data[0]
+
         # forward pass
         loss, acc = segmentation_module(batch_data)
         loss = loss.mean()
