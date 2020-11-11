@@ -163,6 +163,7 @@ def main(cfg, gpus):
     # Dataset and Loader
     dataset_train = TrainDataset(
         cfg.DATASET.root_dataset,
+        cfg.DATASET.root_segm,
         cfg.DATASET.list_train,
         cfg.DATASET,
         batch_per_gpu=cfg.TRAIN.batch_size_per_gpu)
