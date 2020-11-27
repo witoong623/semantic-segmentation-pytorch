@@ -12,7 +12,6 @@ _C.DIR = "ckpt/ade20k-resnet50dilated-ppm_deepsup"
 # -----------------------------------------------------------------------------
 _C.DATASET = CN()
 _C.DATASET.root_dataset = "./data/"
-_C.DATASET.root_segm = './data/'
 _C.DATASET.list_train = "./data/training.odgt"
 _C.DATASET.list_val = "./data/validation.odgt"
 _C.DATASET.num_class = 150
