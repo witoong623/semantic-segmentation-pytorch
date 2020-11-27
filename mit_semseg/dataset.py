@@ -69,10 +69,9 @@ class BaseDataset(torch.utils.data.Dataset):
 
 
 class TrainDataset(BaseDataset):
-    def __init__(self, root_dataset, root_segm, odgt, opt, batch_per_gpu=1, **kwargs):
+    def __init__(self, root_dataset, odgt, opt, batch_per_gpu=1, **kwargs):
         super(TrainDataset, self).__init__(odgt, opt, **kwargs)
         self.root_dataset = root_dataset
-        self.root_segm = root_segm
         # down sampling rate of segm labe
         self.segm_downsampling_rate = opt.segm_downsampling_rate
         self.batch_per_gpu = batch_per_gpu
@@ -157,7 +156,7 @@ class TrainDataset(BaseDataset):
 
             # load image and label
             image_path = os.path.join(self.root_dataset, this_record['fpath_img'])
-            segm_path = os.path.join(self.root_segm, this_record['fpath_segm'])
+            segm_path = os.path.join(self.root_dataset, this_record['fpath_segm'])
 
             img = Image.open(image_path).convert('RGB')
             segm = Image.open(segm_path)
