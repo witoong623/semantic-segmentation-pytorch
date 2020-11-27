@@ -1,8 +1,9 @@
 import torch
 import torch.nn as nn
-from . import resnet, resnext, mobilenet, hrnet
-from mit_semseg.lib.nn import SynchronizedBatchNorm2d
-BatchNorm2d = SynchronizedBatchNorm2d
+from . import resnet, resnext, mobilenet, hrnet, mobilenetv3_large
+# from mit_semseg.lib.nn import SynchronizedBatchNorm2d
+# BatchNorm2d = SynchronizedBatchNorm2d
+from torch.nn import BatchNorm2d
 
 
 class SegmentationModuleBase(nn.Module):
@@ -67,6 +68,9 @@ class ModelBuilder:
         if arch == 'mobilenetv2dilated':
             orig_mobilenet = mobilenet.__dict__['mobilenetv2'](pretrained=pretrained)
             net_encoder = MobileNetV2Dilated(orig_mobilenet, dilate_scale=8)
+        elif arch == 'mobilenetv3dilated':
+            orig_mobilenet = mobilenetv3_large(num_classes=150)
+            net_encoder = MobileNetV3Dilated(orig_mobilenet, dilate_scale=8)
         elif arch == 'resnet18':
             orig_resnet = resnet.__dict__['resnet18'](pretrained=pretrained)
             net_encoder = Resnet(orig_resnet)
@@ -271,6 +275,61 @@ class ResnetDilated(nn.Module):
 class MobileNetV2Dilated(nn.Module):
     def __init__(self, orig_net, dilate_scale=8):
         super(MobileNetV2Dilated, self).__init__()
+        from functools import partial
+
+        # take pretrained mobilenet features
+        self.features = orig_net.features[:-1]
+
+        self.total_idx = len(self.features)
+        self.down_idx = [2, 4, 7, 14]
+
+        if dilate_scale == 8:
+            for i in range(self.down_idx[-2], self.down_idx[-1]):
+                self.features[i].apply(
+                    partial(self._nostride_dilate, dilate=2)
+                )
+            for i in range(self.down_idx[-1], self.total_idx):
+                self.features[i].apply(
+                    partial(self._nostride_dilate, dilate=4)
+                )
+        elif dilate_scale == 16:
+            for i in range(self.down_idx[-1], self.total_idx):
+                self.features[i].apply(
+                    partial(self._nostride_dilate, dilate=2)
+                )
+
+    def _nostride_dilate(self, m, dilate):
+        classname = m.__class__.__name__
+        if classname.find('Conv') != -1:
+            # the convolution with stride
+            if m.stride == (2, 2):
+                m.stride = (1, 1)
+                if m.kernel_size == (3, 3):
+                    m.dilation = (dilate//2, dilate//2)
+                    m.padding = (dilate//2, dilate//2)
+            # other convoluions
+            else:
+                if m.kernel_size == (3, 3):
+                    m.dilation = (dilate, dilate)
+                    m.padding = (dilate, dilate)
+
+    def forward(self, x, return_feature_maps=False):
+        if return_feature_maps:
+            conv_out = []
+            for i in range(self.total_idx):
+                x = self.features[i](x)
+                if i in self.down_idx:
+                    conv_out.append(x)
+            conv_out.append(x)
+            return conv_out
+
+        else:
+            return [self.features(x)]
+
+
+class MobileNetV3Dilated(nn.Module):
+    def __init__(self, orig_net, dilate_scale=8):
+        super(MobileNetV3Dilated, self).__init__()
         from functools import partial
 
         # take pretrained mobilenet features
