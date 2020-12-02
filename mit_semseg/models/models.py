@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from . import resnet, resnext, mobilenet, hrnet, mobilenetv3_large
+from . import resnet, resnext, mobilenet, hrnet
 # from mit_semseg.lib.nn import SynchronizedBatchNorm2d
 # BatchNorm2d = SynchronizedBatchNorm2d
 from torch.nn import BatchNorm2d
@@ -69,6 +69,7 @@ class ModelBuilder:
             orig_mobilenet = mobilenet.__dict__['mobilenetv2'](pretrained=pretrained)
             net_encoder = MobileNetV2Dilated(orig_mobilenet, dilate_scale=8)
         elif arch == 'mobilenetv3dilated':
+            from .mobilenetv3 import mobilenetv3_large
             orig_mobilenet = mobilenetv3_large(num_classes=150)
             net_encoder = MobileNetV3Dilated(orig_mobilenet, dilate_scale=8)
         elif arch == 'resnet18':
@@ -336,7 +337,7 @@ class MobileNetV3Dilated(nn.Module):
         self.features = orig_net.features[:-1]
 
         self.total_idx = len(self.features)
-        self.down_idx = [2, 4, 7, 14]
+        self.down_idx = [2, 4, 7, 13]
 
         if dilate_scale == 8:
             for i in range(self.down_idx[-2], self.down_idx[-1]):

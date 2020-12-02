@@ -17,7 +17,7 @@ from mit_semseg.lib.nn import UserScatteredDataParallel, user_scattered_collate,
 
 
 # fix cuda
-cuda = torch.device('cuda:1')
+cuda = torch.device('cuda:3')
 
 
 # train one epoch

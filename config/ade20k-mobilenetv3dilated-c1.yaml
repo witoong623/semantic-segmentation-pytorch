@@ -11,7 +11,7 @@ DATASET:
 
 MODEL:
   arch_encoder: "mobilenetv3dilated"
-  arch_decoder: "c1_deepsup"
+  arch_decoder: "c1"
   fc_dim: 160
 
 TRAIN:
@@ -39,4 +39,4 @@ TEST:
   checkpoint: "epoch_20.pth"
   result: "./"
 
-DIR: "ckpt/ade20k-mobilenetv3dilated-c1_deepsup"
+DIR: "ckpt/ade20k-mobilenetv3dilated-c1"
